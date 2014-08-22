@@ -1,0 +1,5 @@
+target/*
+.DS_Store
+*.iml
+.idea/*
+twitter4j.properties
