@@ -115,11 +115,11 @@ public final class Kagechiyo {
         }
 
         public void reply(String text) {
-            originalStatus.ifPresent(status -> {
+            originalStatus.ifPresent(oritinalStatus -> {
                 try {
                     twitter.updateStatus(
-                        new StatusUpdate(String.format("@%s %s", status.getUser().getScreenName(),
-                            text)).inReplyToStatusId(status.getInReplyToStatusId()));
+                        new StatusUpdate(String.format("@%s %s", oritinalStatus.getUser().getScreenName(),
+                            text)).inReplyToStatusId(oritinalStatus.getId()));
                 } catch (TwitterException e) {
                     e.printStackTrace();
                 }
