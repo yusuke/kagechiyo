@@ -160,6 +160,10 @@ public final class Kagechiyo {
         }
         @Override
         public void onStatus(Status status) {
+            // guard condition to ignore tweets from myself
+            if(status.getUser().getId() == this.myTwitterID){
+                return;
+            }
             TwitterWrapper twitterWrapper = new TwitterWrapper(status);
             String[] split = status.getText().split(" ");
             for (UserMentionEntity userMentionEntity : status.getUserMentionEntities()) {
