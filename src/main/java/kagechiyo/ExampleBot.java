@@ -1,6 +1,8 @@
 package kagechiyo;
 
+import twitter4j.Twitter;
 import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
 
 /*
  * Copyright 2014 Yusuke Yamamoto
@@ -20,10 +22,9 @@ import twitter4j.TwitterException;
 public class ExampleBot {
     public static void main(String[] args) throws TwitterException {
         new Kagechiyo()
-            .onDirectMessage("help",(message, twitter)-> twitter.sendDirectMessage("ググレカス"))
             .onMention("echo", (status, twitter) -> twitter.reply(status.getText()))
+            .onMention("help", (status, twitter) -> twitter.reply("ググレカス"))
             .onMention("hello", (status, twitter) -> twitter.reply("Hello world!"))
-            .onMention("hello", (status, twitter) -> twitter.reply("goodbye!"))
             .start();
     }
 }
