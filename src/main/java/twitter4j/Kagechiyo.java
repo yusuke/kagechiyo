@@ -1,4 +1,4 @@
-package kagechiyo;
+package twitter4j;
 
 /*
  * Copyright 2014 Yusuke Yamamoto
@@ -15,8 +15,6 @@ package kagechiyo;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import twitter4j.*;
 
 import java.util.*;
 import java.util.function.BiConsumer;

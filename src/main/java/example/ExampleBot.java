@@ -1,6 +1,6 @@
 package example;
 
-import kagechiyo.Kagechiyo;
+import twitter4j.Kagechiyo;
 import twitter4j.TwitterException;
 
 /*

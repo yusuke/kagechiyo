@@ -1,7 +1,6 @@
-package kagechiyo;
+package twitter4j;
 
 import org.junit.jupiter.api.Test;
-import twitter4j.*;
 
 import java.util.ArrayList;
 import java.util.Date;

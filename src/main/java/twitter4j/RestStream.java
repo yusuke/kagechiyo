@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package kagechiyo;
-
-import twitter4j.*;
+package twitter4j;
 
 import java.util.ArrayList;
 import java.util.List;
