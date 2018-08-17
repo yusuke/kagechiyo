@@ -1,13 +1,14 @@
 package kagechiyo;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import twitter4j.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /*
  * Copyright 2014 Yusuke Yamamoto
@@ -24,11 +25,11 @@ import static org.junit.Assert.assertEquals;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class KagechiyoTest {
+class KagechiyoTest {
 
     static final long BOT_USER_ID = 1000L;
     @Test
-    public void testOnMention() {
+    void testOnMention() {
         List<String> commandsExecuted = new ArrayList<>();
         List<String> statusesReceived = new ArrayList<>();
 
@@ -57,7 +58,7 @@ public class KagechiyoTest {
     }
 
     @Test
-    public void testOnMentionWithWrapper() {
+    void testOnMentionWithWrapper() {
         List<String> commandsExecuted = new ArrayList<>();
         List<String> statusesReceived = new ArrayList<>();
 
@@ -86,7 +87,7 @@ public class KagechiyoTest {
     }
 
     @Test
-    public void testOnDirectMessage() {
+    void testOnDirectMessage() {
         List<String> commandsExecuted = new ArrayList<>();
         List<String> directMessagesReceived = new ArrayList<>();
         Kagechiyo kagechiyo = new Kagechiyo(BOT_USER_ID)
@@ -110,7 +111,7 @@ public class KagechiyoTest {
     }
 
     @Test
-    public void testOnDirectMessageWithWrapper() {
+    void testOnDirectMessageWithWrapper() {
         List<String> commandsExecuted = new ArrayList<>();
         List<String> directMessagesReceived = new ArrayList<>();
         Kagechiyo kagechiyo = new Kagechiyo(BOT_USER_ID)
@@ -163,6 +164,16 @@ class StatusMock implements Status {
     @Override
     public String getText() {
         return text;
+    }
+
+    @Override
+    public int getDisplayTextRangeStart() {
+        return 0;
+    }
+
+    @Override
+    public int getDisplayTextRangeEnd() {
+        return 0;
     }
 
     @Override
@@ -229,6 +240,11 @@ class StatusMock implements Status {
             }
 
             @Override
+            public String getEmail() {
+                return null;
+            }
+
+            @Override
             public String getScreenName() {
                 return null;
             }
@@ -269,6 +285,11 @@ class StatusMock implements Status {
             }
 
             @Override
+            public String get400x400ProfileImageURL() {
+                return null;
+            }
+
+            @Override
             public String getProfileImageURLHttps() {
                 return null;
             }
@@ -285,6 +306,11 @@ class StatusMock implements Status {
 
             @Override
             public String getOriginalProfileImageURLHttps() {
+                return null;
+            }
+
+            @Override
+            public String get400x400ProfileImageURLHttps() {
                 return null;
             }
 
@@ -419,6 +445,21 @@ class StatusMock implements Status {
             }
 
             @Override
+            public String getProfileBanner300x100URL() {
+                return null;
+            }
+
+            @Override
+            public String getProfileBanner600x200URL() {
+                return null;
+            }
+
+            @Override
+            public String getProfileBanner1500x500URL() {
+                return null;
+            }
+
+            @Override
             public boolean isProfileBackgroundTiled() {
                 return false;
             }
@@ -466,6 +507,11 @@ class StatusMock implements Status {
             @Override
             public URLEntity getURLEntity() {
                 return null;
+            }
+
+            @Override
+            public String[] getWithheldInCountries() {
+                return new String[0];
             }
 
             @Override
@@ -531,6 +577,26 @@ class StatusMock implements Status {
     }
 
     @Override
+    public String[] getWithheldInCountries() {
+        return new String[0];
+    }
+
+    @Override
+    public long getQuotedStatusId() {
+        return 0;
+    }
+
+    @Override
+    public Status getQuotedStatus() {
+        return null;
+    }
+
+    @Override
+    public URLEntity getQuotedStatusPermalink() {
+        return null;
+    }
+
+    @Override
     public int compareTo(Status o) {
         return 0;
     }
@@ -586,11 +652,6 @@ class StatusMock implements Status {
 
     @Override
     public MediaEntity[] getMediaEntities() {
-        return new MediaEntity[0];
-    }
-
-    @Override
-    public MediaEntity[] getExtendedMediaEntities() {
         return new MediaEntity[0];
     }
 
@@ -682,10 +743,6 @@ class DirectMessageMock implements DirectMessage {
         return new MediaEntity[0];
     }
 
-    @Override
-    public MediaEntity[] getExtendedMediaEntities() {
-        return new MediaEntity[0];
-    }
 
     @Override
     public SymbolEntity[] getSymbolEntities() {

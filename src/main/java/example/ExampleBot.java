@@ -1,8 +1,7 @@
-package kagechiyo;
+package example;
 
-import twitter4j.Twitter;
+import kagechiyo.Kagechiyo;
 import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
 
 /*
  * Copyright 2014 Yusuke Yamamoto

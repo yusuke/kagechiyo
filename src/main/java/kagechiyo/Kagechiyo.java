@@ -23,87 +23,87 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public final class Kagechiyo {
-    private final TwitterStream stream = new TwitterStreamFactory().getInstance();
     private final twitter4j.Twitter twitter = new twitter4j.TwitterFactory().getInstance();
-    private final Map<String, Consumer<Status>> onMentionConsumerMap = new HashMap<>();
-    private final Map<String, BiConsumer<Status, TwitterWrapper>> onMentionBiConsumerMap = new HashMap<>();
-    private final Map<String, Consumer<DirectMessage>> onDirectMessageConsumerMap = new HashMap<>();
-    private final Map<String, BiConsumer<DirectMessage, TwitterWrapper>> onDirectMessageBiConsumerMap = new HashMap<>();
+    private final RestStream stream = new RestStream(twitter);
+    private final Map<String, List<Consumer<Status>>> onMentionConsumerMap = new HashMap<>();
+    private final Map<String, List<BiConsumer<Status, TwitterWrapper>>> onMentionBiConsumerMap = new HashMap<>();
+    private final Map<String, List<Consumer<DirectMessage>>> onDirectMessageConsumerMap = new HashMap<>();
+    private final Map<String, List<BiConsumer<DirectMessage, TwitterWrapper>>> onDirectMessageBiConsumerMap = new HashMap<>();
 
-    private final Set<Consumer<Status>> onMentionConsumersSet = new HashSet<>();
-    private final Set<BiConsumer<Status, TwitterWrapper>> onMentionBiConsumersSet = new HashSet<>();
-    private final Set<Consumer<DirectMessage>> onDirectMessageConsumersSet = new HashSet<>();
-    private final Set<BiConsumer<DirectMessage, TwitterWrapper>> onDirectMessageBiConsumersSet = new HashSet<>();
+    private final List<Consumer<Status>> onMentionConsumersList = new ArrayList<>();
+    private final List<BiConsumer<Status, TwitterWrapper>> onMentionBiConsumersList = new ArrayList<>();
+    private final List<Consumer<DirectMessage>> onDirectMessageConsumersList = new ArrayList<>();
+    private final List<BiConsumer<DirectMessage, TwitterWrapper>> onDirectMessageBiConsumersList = new ArrayList<>();
 
     public Kagechiyo() throws TwitterException {
-        listener = new Listener(TwitterFactory.getSingleton());
+        listener = new Listener(twitter);
         stream.addListener(listener);
 
     }
 
     public Kagechiyo(long botUserId) {
         listener = new Listener(botUserId);
-        stream.addListener(listener);
+        new RestStream(twitter).addListener(listener);
 
     }
 
     public Kagechiyo onMention(java.util.function.Consumer<Status> consumer) {
-        onMentionConsumersSet.add(consumer);
+        onMentionConsumersList.add(consumer);
         return this;
     }
 
     public Kagechiyo onMention(java.util.function.BiConsumer<Status, TwitterWrapper> consumer) {
-        onMentionBiConsumersSet.add(consumer);
+        onMentionBiConsumersList.add(consumer);
         return this;
     }
 
     public Kagechiyo onMention(String command, java.util.function.Consumer<Status> consumer) {
-        onMentionConsumerMap.put(command, consumer);
+        onMentionConsumerMap.computeIfAbsent(command, e -> new ArrayList<>()).add(consumer);
         return this;
     }
 
 
     public Kagechiyo onMention(String command, java.util.function.BiConsumer<Status, TwitterWrapper> consumer) {
-        onMentionBiConsumerMap.put(command, consumer);
+        onMentionBiConsumerMap.computeIfAbsent(command, e -> new ArrayList<>()).add(consumer);
         return this;
     }
 
 
     public Kagechiyo onDirectMessage(Consumer<DirectMessage> directMessageConsumer) {
-        onDirectMessageConsumersSet.add(directMessageConsumer);
+        onDirectMessageConsumersList.add(directMessageConsumer);
         return this;
     }
 
     public Kagechiyo onDirectMessage(BiConsumer<DirectMessage, TwitterWrapper> directMessageConsumer) {
-        onDirectMessageBiConsumersSet.add(directMessageConsumer);
+        onDirectMessageBiConsumersList.add(directMessageConsumer);
         return this;
     }
 
     public Kagechiyo onDirectMessage(String command, java.util.function.Consumer<DirectMessage> consumer) {
-        onDirectMessageConsumerMap.put(command, consumer);
+        onDirectMessageConsumerMap.computeIfAbsent(command, e -> new ArrayList<>()).add(consumer);
         return this;
     }
 
     public Kagechiyo onDirectMessage(String command, java.util.function.BiConsumer<DirectMessage, TwitterWrapper> consumer) {
-        onDirectMessageBiConsumerMap.put(command, consumer);
+        onDirectMessageBiConsumerMap.computeIfAbsent(command, e -> new ArrayList<>()).add(consumer);
         return this;
     }
 
-    class TwitterWrapper {
+    public class TwitterWrapper {
         long recipientId;
-        Optional<Status> originalStatus;
-        Optional<DirectMessage> originalDirectMessage;
+        Status originalStatus;
+        DirectMessage originalDirectMessage;
 
         TwitterWrapper(Status status) {
             this.recipientId = status.getUser().getId();
-            this.originalStatus = Optional.of(status);
-            this.originalDirectMessage = Optional.empty();
+            this.originalStatus = status;
+            this.originalDirectMessage = null;
         }
 
         TwitterWrapper(DirectMessage message) {
             this.recipientId = message.getSenderId();
-            this.originalStatus = Optional.empty();
-            this.originalDirectMessage = Optional.of(message);
+            this.originalStatus = null;
+            this.originalDirectMessage = message;
         }
 
         public void updateStatus(String text) {
@@ -115,15 +115,15 @@ public final class Kagechiyo {
         }
 
         public void reply(String text) {
-            originalStatus.ifPresent(oritinalStatus -> {
+            if (originalStatus != null) {
                 try {
                     twitter.updateStatus(
-                        new StatusUpdate(String.format("@%s %s", oritinalStatus.getUser().getScreenName(),
-                            text)).inReplyToStatusId(oritinalStatus.getId()));
+                            new StatusUpdate(String.format("@%s %s", originalStatus.getUser().getScreenName(),
+                                    text)).inReplyToStatusId(originalStatus.getId()));
                 } catch (TwitterException e) {
                     e.printStackTrace();
                 }
-            });
+            }
         }
 
         public void updateStatus(StatusUpdate status) {
@@ -145,23 +145,26 @@ public final class Kagechiyo {
 
 
     public void start() {
-        stream.user();
+        stream.start();
     }
 
     Listener listener;
 
     class Listener extends UserStreamAdapter {
         long myTwitterID;
+
         Listener(Twitter twitter) throws TwitterException {
             this.myTwitterID = twitter.verifyCredentials().getId();
         }
-        Listener(long myTwitterID){
+
+        Listener(long myTwitterID) {
             this.myTwitterID = myTwitterID;
         }
+
         @Override
         public void onStatus(Status status) {
             // guard condition to ignore tweets from myself
-            if(status.getUser().getId() == this.myTwitterID){
+            if (status.getUser().getId() == this.myTwitterID) {
                 return;
             }
             TwitterWrapper twitterWrapper = new TwitterWrapper(status);
@@ -171,11 +174,23 @@ public final class Kagechiyo {
                     // call consumers only the status is a mention for the bot account
                     if (split.length >= 2) {
                         String command = split[1];
-                        Optional.ofNullable(onMentionConsumerMap.get(command)).ifPresent(e -> e.accept(status));
-                        Optional.ofNullable(onMentionBiConsumerMap.get(command)).ifPresent(e -> e.accept(status, twitterWrapper));
+                        List<Consumer<Status>> statusConsumer = onMentionConsumerMap.get(command);
+                        if (statusConsumer != null) {
+                            for (Consumer<Status> consumer : statusConsumer) {
+                                consumer.accept(status);
+                            }
+                        }
+
+                        List<BiConsumer<Status, TwitterWrapper>> wrapperBiConsumer = onMentionBiConsumerMap.get(command);
+
+                        if (wrapperBiConsumer != null) {
+                            for (BiConsumer<Status, TwitterWrapper> statusTwitterWrapperBiConsumer : wrapperBiConsumer) {
+                                statusTwitterWrapperBiConsumer.accept(status, twitterWrapper);
+                            }
+                        }
                     }
-                    onMentionConsumersSet.forEach(e -> e.accept(status));
-                    onMentionBiConsumersSet.forEach(e -> e.accept(status, twitterWrapper));
+                    onMentionConsumersList.forEach(e -> e.accept(status));
+                    onMentionBiConsumersList.forEach(e -> e.accept(status, twitterWrapper));
                     break;
                 }
             }
@@ -187,11 +202,21 @@ public final class Kagechiyo {
             TwitterWrapper twitterWrapper = new TwitterWrapper(directMessage);
             if (args.length >= 1) {
                 String command = args[0];
-                Optional.ofNullable(onDirectMessageConsumerMap.get(command)).ifPresent(e-> e.accept(directMessage));
-                Optional.ofNullable(onDirectMessageBiConsumerMap.get(command)).ifPresent(e -> e.accept(directMessage, twitterWrapper));
+                List<Consumer<DirectMessage>> directMessageConsumer = onDirectMessageConsumerMap.get(command);
+                if (directMessageConsumer != null) {
+                    for (Consumer<DirectMessage> messageConsumer : directMessageConsumer) {
+                        messageConsumer.accept(directMessage);
+                    }
+                }
+                List<BiConsumer<DirectMessage, TwitterWrapper>> directMessageTwitterWrapperBiConsumer = onDirectMessageBiConsumerMap.get(command);
+                if (directMessageTwitterWrapperBiConsumer != null) {
+                    for (BiConsumer<DirectMessage, TwitterWrapper> messageTwitterWrapperBiConsumer : directMessageTwitterWrapperBiConsumer) {
+                        messageTwitterWrapperBiConsumer.accept(directMessage, twitterWrapper);
+                    }
+                }
             }
-            onDirectMessageConsumersSet.forEach(e -> e.accept(directMessage));
-            onDirectMessageBiConsumersSet.forEach(e -> e.accept(directMessage, twitterWrapper));
+            onDirectMessageConsumersList.forEach(e -> e.accept(directMessage));
+            onDirectMessageBiConsumersList.forEach(e -> e.accept(directMessage, twitterWrapper));
         }
     }
 }
